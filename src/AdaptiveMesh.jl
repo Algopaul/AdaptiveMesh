@@ -4,11 +4,11 @@ using LinearAlgebra
 # Write your package code here.
 #
 mutable struct Mesh{TP, TE, TL, TV}
-  points::TP
+  points::Vector{TP}
   edges::TE
   axis_log::TL
   axis_imag::TL
-  abs_points::TV
+  abs_points::Vector{TV}
 end
 
 function update_mesh(mesh)
@@ -19,15 +19,20 @@ function update_mesh(mesh)
   update_abs_points!(mesh)
 end
 
+function update_mesh(mesh::Mesh{TP}) where {TP <: Number}
+  update_abs_points!(mesh)
+  return nothing
+end
+
 function update_abs_points!(mesh)
-  mesh.abs_points = Vector{Vector{ComplexF64}}(undef, length(mesh.points))
+  mesh.abs_points = Vector{eltype(mesh.points)}(undef, length(mesh.points))
   for i in 1:length(mesh.points)
     mesh.abs_points[i] = imag_if_necessary(abscoords(mesh.points[i], mesh), mesh)
   end
   return nothing
 end
 
-function imag_if_necessary(v::Vector, mesh)
+function imag_if_necessary(v::AbstractVector, mesh)
   vv = complex(deepcopy(v))
   for i in 1:length(vv)
     if mesh.axis_imag[i]
@@ -36,6 +41,34 @@ function imag_if_necessary(v::Vector, mesh)
   end
   return vv
 end
+
+function imag_if_necessary(v::Number, mesh)
+  if mesh.axis_imag == true
+    return im*v
+  else
+    return v
+  end
+end
+
+function abscoords(p::AbstractVector, mesh)
+  pabs = deepcopy(p)
+  for i in 1:length(p)
+    if mesh.axis_log[i]
+      pabs[i] = exp10(pabs[i])
+    end
+  end
+  return pabs
+end
+
+function abscoords(p::Number, mesh)
+  if mesh.axis_log
+    return exp10(p)
+  else
+    return p
+  end
+end
+
+abscoords(i::Int, mesh) = abscoords(mesh.points[i], mesh)
 
 function update_mesh_i(mesh)
   n_dims = length(mesh.points[1])
@@ -139,17 +172,6 @@ end
 
 dist(i::Int, j::Int, mesh) = dist(mesh.points[i], mesh.points[j], mesh)
 
-function abscoords(p, mesh)
-  pabs = deepcopy(p)
-  for i in 1:length(p)
-    if mesh.axis_log[i]
-      pabs[i] = exp10(pabs[i])
-    end
-  end
-  return pabs
-end
-
-abscoords(i::Int, mesh) = abscoords(mesh.points[i], mesh)
 
 function correct_dir(p1, p2, dim, dir)
   if dir*p1[dim] < dir*p2[dim]
@@ -190,21 +212,22 @@ function split_edge(i::Int, mesh, midpointfun)
   pmp = midpointfun(p1, p2)
   popat!(mesh.edges, i)
   push!(mesh.points, pmp)
-  push!(mesh.edges, [edge[1], length(points)])
-  push!(mesh.edges, [length(points), edge[2]])
+  push!(mesh.edges, [edge[1], length(mesh.points)])
+  push!(mesh.edges, [length(mesh.points), edge[2]])
 end
 
 function midpoint(p1, p2)
   return (p1+p2)/2
 end
 
-function refine!(mesh, fun, midpointfun, tol)
-  while refine_i!(mesh, fun, midpointfun, tol)
+
+function refine!(mesh, fun, tol, midpointfun=midpoint)
+  while refine_i!(mesh, fun, tol, midpointfun)
   end
   return nothing
 end
 
-function refine_i!(mesh, fun, midpointfun, tol)
+function refine_i!(mesh, fun, tol, midpointfun=midpoint)
   n_edges = length(mesh.edges)
   inds = get_critical_edges(mesh, fun, midpointfun, tol)
   for idx in sort(inds, rev=true)
@@ -212,6 +235,24 @@ function refine_i!(mesh, fun, midpointfun, tol)
   end
   update_mesh(mesh)
   return n_edges < length(mesh.edges)
+end
+
+function refine_i!(mesh::Mesh{TP}, fun, tol, midpointfun=midpoint) where {TP <: Number}
+  E = [0,0]
+  new_samples = Vector{TP}(undef, 0)
+  for (i, j) in enumerate(2:length(mesh.points))
+    E .= (i, j)
+    if check_edge([i, j], fun, tol, midpointfun, mesh)
+      push!(new_samples, midpointfun(mesh.points[i], mesh.points[j]))
+    end
+  end
+  if length(new_samples) > 0
+    mesh.points =sort(vcat(mesh.points, new_samples))
+    update_mesh(mesh)
+    return true
+  else
+    return false
+  end
 end
 
 function check_edge(edge, fun, tol, midpointfun, mesh)
@@ -246,6 +287,8 @@ end
 
 import Base.getindex
 getindex(m::Mesh, I...) = getindex(m.abs_points, I...)
+
+include("./Factories.jl")
 
 export Mesh, update_mesh, refine!, refine_i!
 
