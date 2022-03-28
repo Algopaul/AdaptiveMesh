@@ -1,0 +1,13 @@
+name = "AdaptiveMesh"
+uuid = "c7dccacd-7184-4d93-bd71-b366d4624432"
+authors = ["Paul Schwerdtner"]
+version = "0.1.0"
+
+[compat]
+julia = "1"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]
