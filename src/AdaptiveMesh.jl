@@ -290,7 +290,7 @@ function Base.length(m::Mesh)
 end
 
 Base.getindex(m::Mesh, I...) = getindex(m.abs_points, I...)
-Base.iterate(m::AdaptiveMesh.Mesh, i=1) = length(m) > i ? (getindex(m, i), i+1) : nothing
+Base.iterate(m::AdaptiveMesh.Mesh, i=1) = length(m) >= i ? (getindex(m, i), i+1) : nothing
 
 include("./Factories.jl")
 
