@@ -68,7 +68,7 @@ function abscoords(p::Number, mesh)
   end
 end
 
-abscoords(i::Int, mesh) = abscoords(mesh.points[i], mesh)
+abscoords(i::Int, mesh::Mesh{TD}) where {TD <: AbstractVector{TV} where {TV <: AbstractVector}}= abscoords(mesh.points[i], mesh)
 
 function update_mesh_i(mesh)
   n_dims = length(mesh.points[1])
@@ -285,11 +285,15 @@ function get_critical_edges(m, fun, midpointfun, tol)
   return crit_edges
 end
 
+function Base.length(m::Mesh)
+  return length(m.points)
+end
+
 import Base.getindex
 getindex(m::Mesh, I...) = getindex(m.abs_points, I...)
 
 include("./Factories.jl")
 
-export Mesh, update_mesh, refine!, refine_i!
+export Mesh, update_mesh, refine!, refine_i!, mesh1d
 
 end
