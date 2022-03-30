@@ -192,7 +192,20 @@ function equal_coords_axis(p1, p2, dim::Int)
   return true
 end
 
-function plot_mesh(m)
+function plot_mesh2d(m)
+  plot()
+  for e in m.edges
+    p1 = m.points[e[1]]
+    p2 = m.points[e[2]]
+    plot!([p1[1], p2[1]], [p1[2], p2[2]], legend=nothing, color = :blue)
+  end
+  for p in m.points
+    scatter!([p[1]], [p[2]], legend=nothing, color = :black)
+  end
+  plot!()
+end
+
+function plot_mesh3d(m)
   plot()
   for e in m.edges
     p1 = m.points[e[1]]

@@ -26,3 +26,20 @@ function Mesh(points::AbstractVector{TV}; axis_log=zeros(Bool,length(points[1]))
   update_mesh(mesh)
   return mesh
 end
+
+function MeshGrid2d(Ps1::AbstractVector{V}, Ps2::AbstractVector{V}; axis_log=zeros(Bool, 2), axis_imag=zeros(Bool, 2)) where {V <: Number}
+  np1 = length(Ps1)
+  np2 = length(Ps2)
+  points = Vector{Vector{V}}(undef, np1*np2)
+  ij = 0
+  for i in 1:np1
+    for j in 1:np2
+      ij += 1
+      points[ij] = [Ps1[i], Ps2[j]]
+    end
+  end
+  m = Mesh(points; axis_log, axis_imag)
+  return m
+end
+
+export mesh1d, MeshGrid2d
