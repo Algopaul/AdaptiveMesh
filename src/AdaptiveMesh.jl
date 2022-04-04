@@ -14,7 +14,8 @@ end
 function update_mesh(mesh)
   counter = 1
   while counter > 0
-    counter = update_mesh_i(mesh)
+    k = @elapsed counter = update_mesh_i(mesh)
+    println(k)
   end
   update_abs_points!(mesh)
 end
@@ -108,32 +109,36 @@ function next_point(i::Int, mesh, dim, dir)
 end
 
 function edge_between(p1, p2, mesh)
+  ch_dim = findfirst(s -> (p1-p2)[s] != 0, 1:length(p1))
+  d1 = min(p1[ch_dim], p2[ch_dim])
+  d2 = max(p1[ch_dim], p2[ch_dim])
   for edge in mesh.edges
     p3, p4 = endpoints(edge, mesh)
-    if check_if_between(p1, p2, p3, p4)
+    if check_if_between(p1, p2, p3, p4, ch_dim, d1, d2)
       return true
     end
   end
   return false
 end
 
-function check_if_between(p1, p2, p3, p4)
+function check_if_between(p1, p2, p3, p4,
+    ch_dim = findfirst(s -> (p1-p2)[s] != 0, 1:length(p1)),
+    d1 = min(p1[ch_dim], p2[ch_dim]),
+    d2 = max(p1[ch_dim], p2[ch_dim]),
+  )
   if (p3, p4) == (p1, p2)
     return true
   end
   if (p4, p3) == (p1, p2)
     return true
   end
-  dim = get_dim(p3, p4)
-  ch_dim = findfirst(s -> (p1-p2)[s] != 0, 1:length(p1))
-  d1 = min(p1[ch_dim], p2[ch_dim])
-  d2 = max(p1[ch_dim], p2[ch_dim])
   if !(d1 < p3[ch_dim] < d2)
     return false
   end
   if !(d1 < p4[ch_dim] < d2)
     return false
   end
+  dim = get_dim(p3, p4)
   for i in setdiff(1:length(p1), [dim, ch_dim])
     if p2[i] != p4[i]
       return false
@@ -161,9 +166,12 @@ function dist(p1, p2, mesh)
 end
 
 function get_dim(p1, p2)
-  d = p1-p2
-  @assert hamming_norm(d) == 1
-  return findfirst(s -> d[s] != 0, 1:length(d))
+  @inbounds for i in 1:length(p1)
+    if p1[i] != p2[i]
+      return i
+    end
+  end
+  return length(p1)
 end
 
 function hamming_norm(v)
@@ -264,6 +272,7 @@ function refine_i!(mesh::Mesh{TP}, fun, tol, midpointfun=midpoint) where {TP <: 
     update_mesh(mesh)
     return true
   else
+    update_mesh(mesh)
     return false
   end
 end
