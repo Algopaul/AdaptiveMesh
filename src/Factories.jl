@@ -3,19 +3,6 @@ function mesh1d(v::AbstractVector{T}) where {T}
   return m
 end
 
-function Mesh(
-  points::AbstractVector{TV},
-  edges=Vector{Vector{Int}}(undef, 0),
-  edge_orientations=Vector{Int}(undef, 0)
-  ) where {TV <: AbstractVector}
-  Tc = eltype(points[1])
-  abs_points = Vector{Vector{Tc}}(undef, length(points))
-  mesh = Mesh(Vector(points), edges, edge_orientations)
-  update_edge_orientations!(mesh)
-  update_mesh(mesh)
-  return mesh
-end
-
 function Mesh(points::AbstractVector{TV}) where {TV <: Number}
   return mesh1d(points)
 end

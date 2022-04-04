@@ -5,8 +5,8 @@ mutable struct ScaledMesh{TM, TL, TV}
   abs_points::TV
 end
 
-function Base.length(m::Mesh)
-  return length(m.points)
+function Base.length(m::ScaledMesh)
+  return length(m.mesh)
 end
 Base.getindex(m::ScaledMesh, I...) = getindex(m.abs_points, I...)
 Base.iterate(m::AdaptiveMesh.ScaledMesh, i=1) = length(m) >= i ? (getindex(m, i), i+1) : nothing

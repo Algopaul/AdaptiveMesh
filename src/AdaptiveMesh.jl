@@ -3,10 +3,22 @@ module AdaptiveMesh
 using LinearAlgebra
 # Write your package code here.
 #
-mutable struct Mesh{TP, TE}
+mutable struct Mesh{TP, TE, TI}
   points::Vector{TP}
   edges::TE
-  edge_orientations::Vector{Int}
+  edge_orientations::TI
+  function Mesh(
+      points::AbstractVector{TV},
+      edges=Vector{Vector{Int}}(undef, 0),
+      edge_orientations=Vector{Int}(undef, 0)
+    ) where {TV}
+    @info "Constructing Mesh"
+    et = typeof(edges)
+    eot = typeof(edge_orientations)
+    mesh = new{TV, et, eot}(Vector(points), edges, edge_orientations)
+    update_edge_orientations!(mesh)
+    return mesh
+  end
 end
 
 function update_mesh(mesh::Mesh)
@@ -44,9 +56,11 @@ function create_new_edge_if_needed(i::Int, mesh, dim, dir)
 end
 
 function update_edge_orientations!(mesh)
-  mesh.edge_orientations = Vector{Int}(undef, length(mesh.edges))
-  for (i, e) in enumerate(mesh.edges)
-    mesh.edge_orientations[i] = get_dim(mesh.edges[i][1], mesh.edges[i][2])
+  n = length(mesh.edges)
+  mesh.edge_orientations = Vector{Int}(undef, n)
+  for i in 1:n
+    p1, p2 = endpoints(mesh.edges[i], mesh)
+    mesh.edge_orientations[i] = get_dim(p1, p2)
   end
 end
 
