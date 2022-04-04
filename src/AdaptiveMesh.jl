@@ -12,7 +12,6 @@ mutable struct Mesh{TP, TE, TI}
       edges=Vector{Vector{Int}}(undef, 0),
       edge_orientations=Vector{Int}(undef, 0)
     ) where {TV}
-    @info "Constructing Mesh"
     et = typeof(edges)
     eot = typeof(edge_orientations)
     mesh = new{TV, et, eot}(Vector(points), edges, edge_orientations)
@@ -21,19 +20,19 @@ mutable struct Mesh{TP, TE, TI}
   end
 end
 
-function update_mesh(mesh::Mesh)
-  n_newpoints = update_mesh_i(mesh) # maybe this must be repeated
+function update_mesh(mesh::Mesh, i_start = 1)
+  n_newpoints = update_mesh_i(mesh, i_start) # maybe this must be repeated
   return n_newpoints
 end
 
-function update_mesh(mesh::Mesh{TP}) where {TP <: Number}
+function update_mesh(mesh::Mesh{TP}, i_start = 1) where {TP <: Number}
   return nothing
 end
 
-function update_mesh_i(mesh)
+function update_mesh_i(mesh, i_start = 1)
   n_dims = length(mesh.points[1])
   counter = 0
-  for i in 1:length(mesh.points)
+  for i in i_start:length(mesh.points)
     for dim in 1:n_dims
       for dir in [1, -1]
         counter += create_new_edge_if_needed(i, mesh, dim, dir)
@@ -198,6 +197,7 @@ Base.iterate(m::AdaptiveMesh.Mesh, i=1) = length(m) >= i ? (getindex(m, i), i+1)
 include("./Factories.jl")
 include("./PlotRecipes.jl")
 include("./ScaledMesh.jl")
+include("./Refinement.jl")
 
 export Mesh, update_mesh, refine!, refine_i!, mesh1d
 

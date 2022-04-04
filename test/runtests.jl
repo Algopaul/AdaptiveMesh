@@ -33,3 +33,7 @@ end
   TestConnection_Case2D()
   TestConnection_Case3D()
 end
+
+include("./RefinementTests.jl")
+
+

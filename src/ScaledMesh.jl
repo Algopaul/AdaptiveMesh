@@ -63,4 +63,6 @@ end
 
 expcoords(i::Int, sm::Mesh{TD}) where {TD <: AbstractVector{TV} where {TV <: AbstractVector}} = expcoords(sm.mesh.points[i], sm)
 
+split_edge(i::Int, mesh::ScaledMesh) = nothing
+
 export ScaledMesh
