@@ -3,18 +3,15 @@ module AdaptiveMesh
 using LinearAlgebra
 # Write your package code here.
 #
-mutable struct Mesh{TP, TE, TL, TV}
+mutable struct Mesh{TP, TE}
   points::Vector{TP}
   edges::TE
   edge_orientations::Vector{Int}
-  axis_log::TL
-  axis_imag::TL
-  abs_points::Vector{TV}
 end
 
-function update_mesh(mesh)
-  counter = 1
-  update_mesh_i(mesh) # maybe this must be repeated
+function update_mesh(mesh::Mesh)
+  n_newpoints = update_mesh_i(mesh) # maybe this must be repeated
+  return n_newpoints
 end
 
 function update_mesh(mesh::Mesh{TP}) where {TP <: Number}
@@ -48,7 +45,7 @@ end
 
 function update_edge_orientations!(mesh)
   mesh.edge_orientations = Vector{Int}(undef, length(mesh.edges))
-  for (i, e) in mesh.edges
+  for (i, e) in enumerate(mesh.edges)
     mesh.edge_orientations[i] = get_dim(mesh.edges[i][1], mesh.edges[i][2])
   end
 end
@@ -67,13 +64,27 @@ function next_point(i::Int, mesh, dim, dir)
 end
 
 function edge_between(p1, p2, mesh)
-  ch_dim = findfirst(s -> (p1-p2)[s] != 0, 1:length(p1))
-  d1 = min(p1[ch_dim], p2[ch_dim])
-  d2 = max(p1[ch_dim], p2[ch_dim])
-  for (i, edge) in enumerate(mesh.edges)
+  if check_if_edge_exists(p1, p2, mesh)
+    return true
+  else
+    ch_dim = findfirst(s -> (p1-p2)[s] != 0, 1:length(p1))
+    d1 = min(p1[ch_dim], p2[ch_dim])
+    d2 = max(p1[ch_dim], p2[ch_dim])
+    for (i, edge) in enumerate(mesh.edges)
+      p3, p4 = endpoints(edge, mesh)
+      dim = mesh.edge_orientations[i]
+      if check_if_between(p1, p2, p3, p4, ch_dim, d1, d2, dim)
+        return true
+      end
+    end
+    return false
+  end
+end
+
+function check_if_edge_exists(p1, p2, mesh)
+  for edge in mesh.edges
     p3, p4 = endpoints(edge, mesh)
-    dim = mesh.edge_orientations[i]
-    if check_if_between(p1, p2, p3, p4, ch_dim, d1, d2, dim)
+    if (p3, p4) == (p1, p2) || (p4, p3) == (p1, p2)
       return true
     end
   end
@@ -86,11 +97,8 @@ function check_if_between(p1, p2, p3, p4,
     d2 = max(p1[ch_dim], p2[ch_dim]),
     dim = get_dim(p3, p4)
   )
-  if (p3, p4) == (p1, p2)
-    return true
-  end
-  if (p4, p3) == (p1, p2)
-    return true
+  if dim == ch_dim
+    return false
   end
   if !(d1 < p3[ch_dim] < d2)
     return false
@@ -119,9 +127,13 @@ function endpoints(edge, mesh)
 end
 
 function dist(p1, p2, mesh)
-  p1abs = abscoords(p1, mesh)
-  p2abs = abscoords(p2, mesh)
-  return norm(p1abs-p2abs)
+  return norm(p1 - p2)
+end
+
+dist(i::Int, j::Int, mesh) = dist(mesh.points[i], mesh.points[j], mesh)
+
+function dist(p1, p2)
+  return norm(p1 - p2)
 end
 
 function get_dim(p1, p2)
@@ -133,12 +145,15 @@ function get_dim(p1, p2)
   return length(p1)
 end
 
-function hamming_norm(v)
-  sum( v .!= 0)
+function hamming_norm(v::AbstractVector{T}) where T
+  k = 0
+  @inbounds for i in eachindex(v)
+    if v[i] != zero(T)
+      k += 1
+    end
+  end
+  return k
 end
-
-dist(i::Int, j::Int, mesh) = dist(mesh.points[i], mesh.points[j], mesh)
-
 
 function correct_dir(p1, p2, dim, dir)
   if dir*p1[dim] < dir*p2[dim]
@@ -159,38 +174,11 @@ function equal_coords_axis(p1, p2, dim::Int)
   return true
 end
 
-function plot_mesh2d(m)
-  plot()
-  for e in m.edges
-    p1 = m.points[e[1]]
-    p2 = m.points[e[2]]
-    plot!([p1[1], p2[1]], [p1[2], p2[2]], legend=nothing, color = :blue)
-  end
-  for p in m.points
-    scatter!([p[1]], [p[2]], legend=nothing, color = :black)
-  end
-  plot!()
-end
-
-function plot_mesh3d(m)
-  plot()
-  for e in m.edges
-    p1 = m.points[e[1]]
-    p2 = m.points[e[2]]
-    plot!([p1[1], p2[1]], [p1[2], p2[2]], [p1[3], p2[3]], legend=nothing, color = :blue)
-  end
-  for p in m.points
-    scatter!([p[1]], [p[2]], [p[3]], legend=nothing, color = :black)
-  end
-  plot!()
-end
-
-
 function Base.length(m::Mesh)
   return length(m.points)
 end
 
-Base.getindex(m::Mesh, I...) = getindex(m.abs_points, I...)
+Base.getindex(m::Mesh, I...) = getindex(m.points, I...)
 Base.iterate(m::AdaptiveMesh.Mesh, i=1) = length(m) >= i ? (getindex(m, i), i+1) : nothing
 
 include("./Factories.jl")
