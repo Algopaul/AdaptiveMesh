@@ -5,6 +5,24 @@ mutable struct ScaledMesh{TM, TL, TV}
   abs_points::TV
 end
 
+function ScaledMesh(
+    m::Mesh;
+    axis_log = zeros(Bool, length(m.points[1])),
+    axis_imag = zeros(Bool, length(m.points[1]))
+  )
+  Tc = eltype(m.points[1])
+  Tc = any(axis_log) ? float(Tc) : Tc
+  Tc = any(axis_imag) ? complex(Tc) : Tc
+  abs_points = Vector{Vector{Tc}}(undef, 0)
+  sm = ScaledMesh(m, axis_log, axis_imag, abs_points)
+  update_abs_points!(sm)
+  return sm
+end
+
+function n_edges(m::ScaledMesh)
+  return n_edges(m.mesh)
+end
+
 function Base.length(m::ScaledMesh)
   return length(m.mesh)
 end

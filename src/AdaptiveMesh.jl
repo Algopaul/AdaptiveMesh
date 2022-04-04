@@ -191,6 +191,11 @@ function Base.length(m::Mesh)
   return length(m.points)
 end
 
+function n_edges(m::Mesh)
+  return length(m.edges)
+end
+
+
 Base.getindex(m::Mesh, I...) = getindex(m.points, I...)
 Base.iterate(m::AdaptiveMesh.Mesh, i=1) = length(m) >= i ? (getindex(m, i), i+1) : nothing
 

@@ -1,35 +1,43 @@
 function refine!(mesh, fun, tol)
   i_start = 1
-  while i_start <= length(mesh.edges)
+  while i_start <= n_edges(mesh)
     i_start = refine_i!(mesh, fun, tol, i_start)
   end
   return nothing
 end
 
 function refine_i!(mesh, fun, tol, i_start = 1)
-  n_edges = length(mesh.edges)
+  n_edges_0 = n_edges(mesh)
   inds = get_critical_edges(mesh, fun, tol, i_start)
   for idx in sort(inds, rev=true)
     split_edge(idx, mesh)
   end
-  n_edges_m = length(mesh.edges)
+  n_edges_m = n_edges(mesh)
   update_mesh(mesh)
-  n_edges_final = length(mesh.edges)
-  new_i_start = n_edges-(n_edges_m-n_edges) + 1
+  n_edges_final = n_edges(mesh)
+  new_i_start = n_edges_0-(n_edges_m-n_edges_0) + 1
   return new_i_start
 end
 
 function get_critical_edges(m, fun, tol, i_start = 1)
   crit_edges = Vector{Int}(undef, 0)
-  for i in i_start:length(m.edges)
-    if check_edge(m.edges[i], fun, tol, m)
+  for i in i_start:n_edges(m)
+    if check_edge(get_edge(m, i), fun, tol, m)
       push!(crit_edges, i)
     end
   end
   return crit_edges
 end
 
-function split_edge(i::Int, mesh)
+get_edge(m::Mesh, i::Int) = m.edges[i]
+get_edge(m::ScaledMesh, i::Int) = m.mesh.edges[i]
+
+
+function split_edge(i::Int, mesh::ScaledMesh)
+  split_edge(i, mesh.mesh)
+end
+
+function split_edge(i::Int, mesh::Mesh)
   edge = mesh.edges[i]
   p1, p2, pmp = endpoints(edge, mesh) |> with_mean
   popat!(mesh.edges, i)
@@ -41,9 +49,13 @@ function split_edge(i::Int, mesh)
   push!(mesh.edge_orientations, k)
 end
 
-function check_edge(edge, fun, tol, mesh, absco = p -> abscoords(p, mesh))
+function check_edge(edge, fun, tol, mesh::ScaledMesh, absco = p -> abscoords(p, mesh))
+  check_edge(edge, fun, tol, mesh.mesh, absco)
+end
+
+function check_edge(edge, fun, tol, mesh::Mesh, absco = p -> abscoords(p, mesh))
   s0, s1, smp = endpoints(edge, mesh) |> with_mean
-  ωs0, ωs1, ωsmp = s0, s1, smp
+  ωs0, ωs1, ωsmp = absco.([s0, s1, smp])
   fs0, fs1, fsmp = fun(ωs0), fun(ωs1), fun(ωsmp)
   d1=abs(fsmp-fs0)/norm(ωs0-ωsmp)
   d2=abs(fs1-fsmp)/norm(ωs1-ωsmp)
