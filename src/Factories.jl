@@ -1,12 +1,3 @@
-function mesh1d(v::AbstractVector{T}) where {T}
-  m = Mesh(Vector(sort(v)), edges, [1], axis_log, axis_imag, abs_points)
-  return m
-end
-
-function Mesh(points::AbstractVector{TV}) where {TV <: Number}
-  return mesh1d(points)
-end
-
 function MeshGrid2d(
     Ps1::AbstractVector{V},
     Ps2::AbstractVector{V}

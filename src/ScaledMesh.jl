@@ -5,6 +5,8 @@ mutable struct ScaledMesh{TM, TL, TV}
   abs_points::TV
 end
 
+Scaled1DMesh = ScaledMesh{TM} where {TM <: Mesh1D}
+
 function ScaledMesh(
     m::Mesh;
     axis_log = zeros(Bool, length(m.points[1])),
@@ -14,6 +16,20 @@ function ScaledMesh(
   Tc = any(axis_log) ? float(Tc) : Tc
   Tc = any(axis_imag) ? complex(Tc) : Tc
   abs_points = Vector{Vector{Tc}}(undef, 0)
+  sm = ScaledMesh(m, axis_log, axis_imag, abs_points)
+  update_abs_points!(sm)
+  return sm
+end
+
+function ScaledMesh(
+    m::Mesh1D;
+    axis_log = false,
+    axis_imag = false,
+  )
+  Tc = typeof(m.points[1])
+  Tc = any(axis_log) ? float(Tc) : Tc
+  Tc = any(axis_imag) ? complex(Tc) : Tc
+  abs_points = Vector{Tc}(undef, 0)
   sm = ScaledMesh(m, axis_log, axis_imag, abs_points)
   update_abs_points!(sm)
   return sm
@@ -80,7 +96,5 @@ function update_mesh(sm::ScaledMesh)
 end
 
 expcoords(i::Int, sm::Mesh{TD}) where {TD <: AbstractVector{TV} where {TV <: AbstractVector}} = expcoords(sm.mesh.points[i], sm)
-
-split_edge(i::Int, mesh::ScaledMesh) = nothing
 
 export ScaledMesh

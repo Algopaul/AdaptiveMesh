@@ -20,6 +20,8 @@ mutable struct Mesh{TP, TE, TI}
   end
 end
 
+Mesh1D = Mesh{TP} where {TP <: Number}
+
 function update_mesh(mesh::Mesh, i_start = 1)
   n_newpoints = update_mesh_i(mesh, i_start) # maybe this must be repeated
   return n_newpoints
