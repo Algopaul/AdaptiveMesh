@@ -18,4 +18,26 @@ function MeshGrid2d(
   return m
 end
 
-export mesh1d, MeshGrid2d
+function MeshGrid3d(
+    P1::AbstractVector{TV},
+    P2::AbstractVector{TV},
+    P3::AbstractVector{TV},
+  ) where {TV <: Number}
+  Ns = length.([P1, P2, P3])
+  points = Vector{Vector{TV}}(undef, prod(Ns))
+  ij = 0
+  for iN in 1:Ns[1]
+    for jN in 1:Ns[2]
+      for zN in 1:Ns[3]
+        ij += 1
+        points[ij] = [P1[iN], P2[jN], P3[zN]]
+      end
+    end
+  end
+  m = Mesh(points)
+  update_edge_orientations!(m)
+  update_mesh(m)
+  return m
+end
+
+export mesh1d, MeshGrid2d, MeshGrid3d
