@@ -43,7 +43,9 @@ function Base.length(m::ScaledMesh)
   return length(m.mesh)
 end
 Base.getindex(m::ScaledMesh, I...) = getindex(m.abs_points, I...)
-Base.iterate(m::AdaptiveMesh.ScaledMesh, i=1) = length(m) >= i ? (getindex(m, i), i+1) : nothing
+function Base.iterate(m::AdaptiveMesh.ScaledMesh, i=1)
+  return length(m) >= i ? (getindex(m, i), i+1) : nothing
+end
 
 function update_abs_points!(sm::ScaledMesh)
   n_points = length(sm.mesh.points)
