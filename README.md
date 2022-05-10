@@ -1,6 +1,6 @@
 # AdaptiveMesh
 
-Implements a generalization of the adaptive sampling algorithm as in [SV2021](# References), which is based on [AN2018](# References), to n-dimensional grids.
+Implements a generalization of the adaptive sampling algorithm as in [SV2021](#References), which is based on [AN2018](#References), to n-dimensional grids.
 
 The function `update_mesh` adds new edges to the mesh based on the following rule. If two points with Hamming norm distance 1 are not connected and there is no edge between them, then add an edge between them. A visualization of this in 2d is:
 ```
@@ -16,7 +16,7 @@ Note that no edges are added *off-axis*.
 
 The function ``refine_i!`` adds new points on edges such that a function ``fun`` (passed as argument) is resolved sufficiently accurate on the edges. The function ``refine!`` alternates between the functions ``refine_i`` and ``update_mesh`` to make sure that the given function is resolved sufficiently accurate on the domain of the mesh.
 
-## References
+##References
 
 ```latex
 @article{SV2021,
