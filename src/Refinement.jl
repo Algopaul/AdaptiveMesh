@@ -19,6 +19,43 @@ function refine_i!(mesh, fun, tol, i_start = 1)
   return new_i_start
 end
 
+function refine!(mesh::T, fun, tol) where {T <: Union{Scaled1DMesh, Mesh1D}}
+  while refine_i!(mesh, fun, tol)
+  end
+  return nothing
+end
+
+get_mesh_points(mesh::Mesh) = mesh.points
+get_mesh_points(mesh::ScaledMesh) = mesh.mesh.points
+function set_mesh_points(mesh::Mesh, points)
+  mesh.points = points
+end
+function set_mesh_points(mesh::ScaledMesh, points)
+  mesh.mesh.points = points
+end
+
+
+function refine_i!(mesh::T, fun, tol) where {T <: Union{Scaled1DMesh, Mesh1D}}
+  E = [0,0]
+  points = get_mesh_points(mesh)
+  new_samples = Vector{eltype(points)}(undef, 0)
+  for (i, j) in enumerate(2:length(points))
+    E .= (i, j)
+    if check_edge([i, j], fun, tol, mesh)
+      push!(new_samples, (points[i]+points[j])/2)
+    end
+  end
+  if length(new_samples) > 0
+    all_points = sort(vcat(points, new_samples))
+    set_mesh_points(mesh, all_points)
+    update_mesh(mesh)
+    return true
+  else
+    update_mesh(mesh)
+    return false
+  end
+end
+
 function get_critical_edges(m, fun, tol, i_start = 1)
   crit_edges = Vector{Int}(undef, 0)
   for i in i_start:n_edges(m)
@@ -82,23 +119,4 @@ end
 function inner_point_required(deriv_bound, x1, x2, f1, f2, tol, mesh)
   γ=max(f1, f2)
   return deriv_bound*dist(x2, x1, mesh) >= 2*(γ+tol)-(f1+f2)
-end
-
-function refine_i!(mesh::Mesh{TP}, fun, tol) where {TP <: Number}
-  E = [0,0]
-  new_samples = Vector{TP}(undef, 0)
-  for (i, j) in enumerate(2:length(mesh.points))
-    E .= (i, j)
-    if check_edge([i, j], fun, tol, mesh)
-      push!(new_samples, (mesh.points[i]+mesh.points[j])/2)
-    end
-  end
-  if length(new_samples) > 0
-    mesh.points =sort(vcat(mesh.points, new_samples))
-    update_mesh(mesh)
-    return true
-  else
-    update_mesh(mesh)
-    return false
-  end
 end

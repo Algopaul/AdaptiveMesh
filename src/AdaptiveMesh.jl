@@ -1,8 +1,7 @@
 module AdaptiveMesh
 
 using LinearAlgebra
-# Write your package code here.
-#
+
 mutable struct Mesh{TP, TE, TI}
   points::Vector{TP}
   edges::TE
@@ -20,12 +19,14 @@ mutable struct Mesh{TP, TE, TI}
   end
 end
 
+Mesh1D = Mesh{TP} where {TP <: Number}
+
 function update_mesh(mesh::Mesh, i_start = 1)
-  n_newpoints = update_mesh_i(mesh, i_start) # maybe this must be repeated
+  n_newpoints = update_mesh_i(mesh, i_start)
   return n_newpoints
 end
 
-function update_mesh(mesh::Mesh{TP}, i_start = 1) where {TP <: Number}
+function update_mesh(::Mesh{TP}, i_start = 1) where {TP <: Number}
   return nothing
 end
 

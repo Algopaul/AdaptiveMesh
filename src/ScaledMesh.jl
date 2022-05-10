@@ -5,6 +5,8 @@ mutable struct ScaledMesh{TM, TL, TV}
   abs_points::TV
 end
 
+Scaled1DMesh = ScaledMesh{TM} where {TM <: Mesh1D}
+
 function ScaledMesh(
     m::Mesh;
     axis_log = zeros(Bool, length(m.points[1])),
@@ -19,20 +21,31 @@ function ScaledMesh(
   return sm
 end
 
-function n_edges(m::ScaledMesh)
-  return n_edges(m.mesh)
+function ScaledMesh(
+    m::Mesh1D;
+    axis_log = false,
+    axis_imag = false,
+  )
+  Tc = typeof(m.points[1])
+  Tc = any(axis_log) ? float(Tc) : Tc
+  Tc = any(axis_imag) ? complex(Tc) : Tc
+  abs_points = Vector{Tc}(undef, 0)
+  sm = ScaledMesh(m, axis_log, axis_imag, abs_points)
+  update_abs_points!(sm)
+  return sm
 end
 
-function Base.length(m::ScaledMesh)
-  return length(m.mesh)
-end
+n_edges(sm::ScaledMesh) = n_edges(sm.mesh)
+Base.length(sm::ScaledMesh) = length(sm.mesh)
 Base.getindex(m::ScaledMesh, I...) = getindex(m.abs_points, I...)
-Base.iterate(m::AdaptiveMesh.ScaledMesh, i=1) = length(m) >= i ? (getindex(m, i), i+1) : nothing
+function Base.iterate(m::AdaptiveMesh.ScaledMesh, i=1)
+  return length(m) >= i ? (getindex(m, i), i+1) : nothing
+end
 
 function update_abs_points!(sm::ScaledMesh)
-  n_points = sm.mesh.points
-  sm.abs_points = Vector{eltype(sm.mesh.points)}(undef, length(n_points))
-  for i in 1:length(n_points)
+  n_points = length(sm.mesh.points)
+  sm.abs_points = Vector{eltype(sm.mesh.points)}(undef, n_points)
+  for i in 1:n_points
     sm.abs_points[i] = imag_if_necessary(expcoords(sm.mesh.points[i], sm), sm)
   end
   return nothing
@@ -80,7 +93,5 @@ function update_mesh(sm::ScaledMesh)
 end
 
 expcoords(i::Int, sm::Mesh{TD}) where {TD <: AbstractVector{TV} where {TV <: AbstractVector}} = expcoords(sm.mesh.points[i], sm)
-
-split_edge(i::Int, mesh::ScaledMesh) = nothing
 
 export ScaledMesh
