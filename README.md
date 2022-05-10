@@ -16,6 +16,14 @@ Note that no edges are added *off-axis*.
 
 The function ``refine_i!`` adds new points on edges such that a function ``fun`` (passed as argument) is resolved sufficiently accurate on the edges. The function ``refine!`` alternates between the functions ``refine_i`` and ``update_mesh`` to make sure that the given function is resolved sufficiently accurate on the domain of the mesh.
 
+## Installation
+
+In a `julia` instance, run the commands
+```julia
+using Pkg
+Pkg.add(url="git@github.com:Transferflows/AdaptiveMesh.git")
+```
+
 ## References
 
 ```latex
