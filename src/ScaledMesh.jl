@@ -46,9 +46,9 @@ Base.getindex(m::ScaledMesh, I...) = getindex(m.abs_points, I...)
 Base.iterate(m::AdaptiveMesh.ScaledMesh, i=1) = length(m) >= i ? (getindex(m, i), i+1) : nothing
 
 function update_abs_points!(sm::ScaledMesh)
-  n_points = sm.mesh.points
-  sm.abs_points = Vector{eltype(sm.mesh.points)}(undef, length(n_points))
-  for i in 1:length(n_points)
+  n_points = length(sm.mesh.points)
+  sm.abs_points = Vector{eltype(sm.mesh.points)}(undef, n_points)
+  for i in 1:n_points
     sm.abs_points[i] = imag_if_necessary(expcoords(sm.mesh.points[i], sm), sm)
   end
   return nothing
