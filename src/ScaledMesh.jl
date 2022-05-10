@@ -35,13 +35,8 @@ function ScaledMesh(
   return sm
 end
 
-function n_edges(m::ScaledMesh)
-  return n_edges(m.mesh)
-end
-
-function Base.length(m::ScaledMesh)
-  return length(m.mesh)
-end
+n_edges(sm::ScaledMesh) = n_edges(sm.mesh)
+Base.length(sm::ScaledMesh) = length(sm.mesh)
 Base.getindex(m::ScaledMesh, I...) = getindex(m.abs_points, I...)
 function Base.iterate(m::AdaptiveMesh.ScaledMesh, i=1)
   return length(m) >= i ? (getindex(m, i), i+1) : nothing

@@ -38,5 +38,3 @@ end
 end
 
 include("./RefinementTests.jl")
-
-
