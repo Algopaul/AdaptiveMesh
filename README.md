@@ -2,7 +2,7 @@
 
 Implements a generalization of the adaptive sampling algorithm as in [SV2021](#References), which is based on [AN2018](#References), to n-dimensional grids.
 
-The function `update_mesh` adds new edges to the mesh based on the following rule. If two points with Hamming norm distance 1 are not connected and there is no edge between them, then add an edge between them. A visualization of this in 2d is:
+The function `update_mesh` adds new edges to the mesh based on the following rule. If two points with Hamming norm distance 1 are not connected and there is no point or edge between them, then add an edge between them. A visualization of this in 2d is:
 ```
 x--x--x     x--x--x
             |  |  |
